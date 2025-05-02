@@ -26,10 +26,13 @@ def hide_text_in_image(image, text):
     return stepic.encode(image, data)
 
 def extract_text_from_image(image):
-    data = stepic.decode(image)
-    if isinstance(data, bytes):
-        return data.decode('utf-8')
-    return data
+    try:
+        data = stepic.decode(image)
+        if isinstance(data, bytes):
+            return data.decode('utf-8')
+        return data
+    except Exception:
+        return ''
 
 # --- Simple Original LSB Functions ---
 def lsb_encode(image, message):
@@ -241,16 +244,21 @@ def decryption_view(request):
                 image = image.convert('RGBA')
 
             decoded = extract_text_from_image(image)
-            if not decoded.startswith("MSG:"):
-                warning = "No valid hidden message found in this image."
+            if not decoded or not decoded.startswith("MSG:"):
+                warning = "No hidden message found in the uploaded image."
                 return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
-            text = decoded[4:]  # Remove prefix
+            # Extract only the actual message
+            text = decoded[4:]
             shared_image = image.copy()
             shared_text = text
 
         except UnidentifiedImageError:
             warning = "Unsupported or corrupted image format."
+            return render(request, 'decryption.html', {'text': '', 'warning': warning})
+
+        except Exception:
+            warning = "An unexpected error occurred during decryption."
             return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
     return render(request, 'decryption.html', {'text': text, 'warning': warning})
