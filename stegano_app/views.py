@@ -176,9 +176,9 @@ def f5_decode(image):
 
 # --------------------------------------
 
-
 def encryption_view(request):
     global shared_image, shared_text
+    message = ''
 
     if request.method == 'POST':
         text = request.POST['text']
@@ -207,19 +207,14 @@ def encryption_view(request):
             encrypted.save(output_buffer, format="PNG")
             output_buffer.seek(0)
 
-            # Store success message in session
-            request.session['message'] = '✅ Success! Your message has been encrypted into the image.'
 
-            # Create download response
-            response = HttpResponse(output_buffer, content_type='image/png')
-            response['Content-Disposition'] = 'attachment; filename=stego_image.png'
-            return response
+
+            # Render response with image and message
+            return render(request, 'encryption.html', {'message': '✅ Success! Your message has been encrypted into the image.'})
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    # After download, show message on GET
-    message = request.session.pop('message', '')
     return render(request, 'encryption.html', {'message': message})
 
 def decryption_view(request):
