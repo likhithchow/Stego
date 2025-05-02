@@ -195,9 +195,11 @@ def encryption_view(request):
         try:
             image = Image.open(image_file)
 
+            # Reject SVG
             if image.format == 'SVG':
                 return render(request, 'encryption.html', {'message': 'SVG format is not supported for encryption.'})
 
+            # Convert all to RGBA
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
@@ -205,14 +207,22 @@ def encryption_view(request):
 
             shared_image = image.copy()
             shared_text = text
-
             message = "✅ Success! Your message has been encrypted into the image."
-            return render(request, 'encryption.html', {'message': message})
+
+            # Return downloadable PNG
+            output_buffer = io.BytesIO()
+            encrypted.save(output_buffer, format="PNG")
+            output_buffer.seek(0)
+
+            response = HttpResponse(output_buffer, content_type='image/png')
+            response['Content-Disposition'] = 'attachment; filename=stego_image.png'
+            return response
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
     return render(request, 'encryption.html', {'message': message})
+
 
 
 def decryption_view(request):
@@ -230,27 +240,28 @@ def decryption_view(request):
         try:
             image = Image.open(image_file)
 
-            if image.format != 'PNG':
+            if image.format not in ['PNG', 'JPEG', 'JPG']:
                 image = image.convert('RGBA')
                 buffer = io.BytesIO()
                 image.save(buffer, format="PNG")
                 image = Image.open(buffer)
 
             decoded = extract_text_from_image(image)
+
+            # ✅ Only accept if the message starts with the expected marker
             if not decoded.startswith("MSG:"):
-                warning = "No valid hidden message found in this image."
+                warning = "❌ No valid hidden message found in this image."
                 return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
-            text = decoded[4:]  # Strip "MSG:"
+            text = decoded[4:]  # Remove 'MSG:' prefix
             shared_image = image.copy()
             shared_text = text
 
-        except Exception as e:
-            warning = "Failed to decode message. Ensure it's a proper stego image."
+        except Exception:
+            warning = "❌ Failed to decode message. Ensure it's a proper stego image."
             return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
     return render(request, 'decryption.html', {'text': text, 'warning': warning})
-
 
 def dashboard_view(request):
     global shared_image, shared_text
