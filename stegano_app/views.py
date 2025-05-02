@@ -10,9 +10,13 @@ import math
 from django.http import HttpResponse
 from PIL import Image, UnidentifiedImageError
 import io
-
+from django.http import FileResponse
+ 
 shared_image = None
 shared_text = ''
+
+def download_image(request, image_path):
+    return FileResponse(open(image_path, 'rb'), as_attachment=True)
 
 def index(request):
     return render(request, 'index.html')
