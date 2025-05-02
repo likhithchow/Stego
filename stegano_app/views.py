@@ -11,13 +11,6 @@ from django.http import HttpResponse
 from PIL import Image, UnidentifiedImageError
 import io
 from django.http import FileResponse
-from django.core.files.storage import default_storage
-from django.utils.crypto import get_random_string
-import os
-from django.http import HttpResponse, FileResponse
-from PIL import UnidentifiedImageError
-from django.conf import settings
-
  
 shared_image = None
 shared_text = ''
@@ -183,10 +176,13 @@ def f5_decode(image):
 
 # --------------------------------------
 
+from django.http import HttpResponse
+from PIL import Image, UnidentifiedImageError
+import io
+
 def encryption_view(request):
     global shared_image, shared_text
     message = ''
-    download_url = None
 
     if request.method == 'POST':
         text = request.POST['text']
@@ -198,9 +194,11 @@ def encryption_view(request):
         try:
             image = Image.open(image_file)
 
+            # Reject SVG
             if image.format == 'SVG':
-                return render(request, 'encryption.html', {'message': 'SVG format is not supported.'})
+                return render(request, 'encryption.html', {'message': 'SVG format is not supported for encryption.'})
 
+            # Convert all to RGBA
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
@@ -209,18 +207,20 @@ def encryption_view(request):
             shared_image = image.copy()
             shared_text = text
 
-            # Save image to media folder
-            filename = f"enc_{image_file.name.rsplit('.', 1)[0]}.png"
-            path = os.path.join(settings.MEDIA_ROOT, filename)
-            encrypted.save(path, format="PNG")
+            # Return downloadable PNG
+            output_buffer = io.BytesIO()
+            encrypted.save(output_buffer, format="PNG")
+            output_buffer.seek(0)
 
-            message = '✅ Text has been encrypted successfully!'
-            download_url = settings.MEDIA_URL + filename
+            response = HttpResponse(output_buffer, content_type='image/png')
+            response['Content-Disposition'] = 'attachment; filename=stego_image.png'
+            return response
 
         except UnidentifiedImageError:
-            message = 'Unsupported or corrupted image format.'
+            return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'encryption.html', {'message': message, 'download_url': download_url})
+    return render(request, 'encryption.html', {'message': message})
+
 
 def decryption_view(request):
     global shared_image, shared_text
