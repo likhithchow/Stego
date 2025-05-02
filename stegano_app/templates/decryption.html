@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -52,6 +51,12 @@
                     <button type="submit" class="btn btn-gradient">Decrypt</button>
                 </div>
             </form>
+
+            {% if warning %}
+                <div class="alert alert-danger mt-4 text-center">
+                    ⚠️ {{ warning }}
+                </div>
+            {% endif %}
 
             {% if text %}
                 <div class="alert alert-success mt-4">
