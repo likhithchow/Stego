@@ -11,7 +11,6 @@ from django.http import HttpResponse
 from PIL import Image, UnidentifiedImageError
 import io
 from django.http import FileResponse
-import base64
  
 shared_image = None
 shared_text = ''
@@ -180,81 +179,73 @@ def f5_decode(image):
 def encryption_view(request):
     global shared_image, shared_text
     message = ''
-    image_base64 = ''
 
     if request.method == 'POST':
-        text = request.POST.get('text', '').strip()
+        text = request.POST['text']
         image_file = request.FILES.get('image')
 
-        if not image_file or not text:
-            return render(request, 'encryption.html', {'message': 'Please upload an image and enter a message.'})
+        if not image_file:
+            return render(request, 'encryption.html', {'message': 'Please upload an image.'})
 
         try:
             image = Image.open(image_file)
 
+            # Reject SVG
             if image.format == 'SVG':
                 return render(request, 'encryption.html', {'message': 'SVG format is not supported for encryption.'})
 
+            # Convert all to RGBA
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
-            encoded_text = "MSG:" + text
-            encrypted = hide_text_in_image(image, encoded_text)
+            encrypted = hide_text_in_image(image, text)
 
             shared_image = image.copy()
             shared_text = text
 
-            # Save image to in-memory buffer
+            # Return downloadable PNG
             output_buffer = io.BytesIO()
             encrypted.save(output_buffer, format="PNG")
             output_buffer.seek(0)
 
-            # Convert image to base64 for inline preview and optional download
-            image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
-
-            message = '✅ Success! Your message has been encrypted into the image.'
+            response = HttpResponse(output_buffer, content_type='image/png')
+            response['Content-Disposition'] = 'attachment; filename=stego_image.png'
+            message="✅ Success! Your message has been encrypted into the image."
+            return render(response,'encryption.html', {'message': message})
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'encryption.html', {'message': message, 'image_base64': image_base64})
+    return render(request, 'encryption.html', {'message': message})
 
 def decryption_view(request):
     global shared_image, shared_text
     text = ''
-    warning = ''
 
     if request.method == 'POST':
         image_file = request.FILES.get('image')
 
         if not image_file:
-            warning = "Please upload an image."
-            return render(request, 'decryption.html', {'text': '', 'warning': warning})
+            return render(request, 'decryption.html', {'text': 'Please upload an image.'})
 
         try:
             image = Image.open(image_file)
 
+            # Reject SVG
             if image.format == 'SVG':
-                warning = "SVG format is not supported for decryption."
-                return render(request, 'decryption.html', {'text': '', 'warning': warning})
+                return render(request, 'decryption.html', {'text': 'SVG format is not supported for decryption.'})
 
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
-            decoded = extract_text_from_image(image)
-            if not decoded.startswith("MSG:"):
-                warning = "No valid hidden message found in this image."
-                return render(request, 'decryption.html', {'text': '', 'warning': warning})
-
-            text = decoded[4:]  # Remove prefix
+            text = extract_text_from_image(image)
             shared_image = image.copy()
             shared_text = text
 
         except UnidentifiedImageError:
-            warning = "Unsupported or corrupted image format."
-            return render(request, 'decryption.html', {'text': '', 'warning': warning})
+            return render(request, 'decryption.html', {'text': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'decryption.html', {'text': text, 'warning': warning})
+    return render(request, 'decryption.html', {'text': text})
 
 def dashboard_view(request):
     global shared_image, shared_text

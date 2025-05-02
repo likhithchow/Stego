@@ -55,14 +55,12 @@
 
             {% if warning %}
                 <div class="alert alert-danger mt-4 text-center">
-                    ❌ {{ warning }}
+                    <strong>❌ {{ warning }}</strong>
                 </div>
-            {% endif %}
-
-            {% if text %}
+            {% elif text %}
                 <div class="alert alert-success mt-4 text-center">
                     <h5 class="text-success">✅ Decrypted Message:</h5>
-                    <p class="mb-0">{{ text }}</p>
+                    <p class="mb-0"><strong>{{ text }}</strong></p>
                 </div>
             {% endif %}
         </div>
