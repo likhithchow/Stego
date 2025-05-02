@@ -55,9 +55,10 @@
                     <button type="submit" class="btn btn-gradient">Encrypt</button>
                 </div>
             </form>
+
             {% if message %}
-                <div class="alert alert-info mt-4 text-center">
-                    {{ message }}
+                <div class="alert alert-success mt-4 text-center">
+                    <strong>✅ {{ message }}</strong>
                 </div>
             {% endif %}
         </div>
