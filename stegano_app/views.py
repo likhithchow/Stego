@@ -211,7 +211,7 @@ def encryption_view(request):
             response = HttpResponse(output_buffer, content_type='image/png')
             response['Content-Disposition'] = 'attachment; filename=stego_image.png'
             message="✅ Success! Your message has been encrypted into the image."
-            return render(response,'encryption.html', {'message': message})
+            return response
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
