@@ -219,7 +219,8 @@ def encryption_view(request):
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'encryption.html', {'message': message})
+    return render(request, 'encryption.html', {'message': '✅ Success! Your message has been encrypted into the image.'})
+
 
 
 def decryption_view(request):
