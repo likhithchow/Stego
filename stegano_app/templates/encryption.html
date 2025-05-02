@@ -32,6 +32,12 @@
         .btn-gradient:hover {
             background: linear-gradient(to right, #302b63, #0f0c29);
         }
+        .img-preview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -58,7 +64,14 @@
 
             {% if message %}
                 <div class="alert alert-success mt-4 text-center">
-                    <strong>✅ {{ message }}</strong>
+                    <strong>{{ message }}</strong>
+                </div>
+            {% endif %}
+
+            {% if image_base64 %}
+                <div class="text-center mt-4">
+                    <h5 class="text-light">🖼️ Preview of Encrypted Image</h5>
+                    <img src="data:image/png;base64,{{ image_base64 }}" alt="Encrypted Image" class="img-preview mt-3">
                 </div>
             {% endif %}
         </div>

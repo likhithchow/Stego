@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from PIL import Image, UnidentifiedImageError
 import io
 from django.http import FileResponse
+import base64
  
 shared_image = None
 shared_text = ''
@@ -179,13 +180,14 @@ def f5_decode(image):
 def encryption_view(request):
     global shared_image, shared_text
     message = ''
+    image_base64 = ''
 
     if request.method == 'POST':
-        text = request.POST['text']
+        text = request.POST.get('text', '').strip()
         image_file = request.FILES.get('image')
 
-        if not image_file:
-            return render(request, 'encryption.html', {'message': 'Please upload an image.'})
+        if not image_file or not text:
+            return render(request, 'encryption.html', {'message': 'Please upload an image and enter a message.'})
 
         try:
             image = Image.open(image_file)
@@ -207,15 +209,15 @@ def encryption_view(request):
             encrypted.save(output_buffer, format="PNG")
             output_buffer.seek(0)
 
+            # Convert image to base64 for inline preview and optional download
+            image_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
 
-
-            # Render response with image and message
-            return render(request, 'encryption.html', {'message': '✅ Success! Your message has been encrypted into the image.'})
+            message = '✅ Success! Your message has been encrypted into the image.'
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'encryption.html', {'message': message})
+    return render(request, 'encryption.html', {'message': message, 'image_base64': image_base64})
 
 def decryption_view(request):
     global shared_image, shared_text
