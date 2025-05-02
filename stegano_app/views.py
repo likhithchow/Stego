@@ -197,29 +197,30 @@ def encryption_view(request):
             if image.format == 'SVG':
                 return render(request, 'encryption.html', {'message': 'SVG format is not supported for encryption.'})
 
-            # Convert all to RGBA
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
-            encrypted = hide_text_in_image(image, text)
+            # ✅ ADD THIS LINE
+            encoded_text = "MSG:" + text
+            encrypted = hide_text_in_image(image, encoded_text)
 
             shared_image = image.copy()
             shared_text = text
 
-            # Return downloadable PNG
             output_buffer = io.BytesIO()
             encrypted.save(output_buffer, format="PNG")
             output_buffer.seek(0)
 
             response = HttpResponse(output_buffer, content_type='image/png')
             response['Content-Disposition'] = 'attachment; filename=stego_image.png'
-            message="✅ Success! Your message has been encrypted into the image."
             return response
 
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
     return render(request, 'encryption.html', {'message': message})
+
+HIDDEN_PREFIX = "MSG:"
 
 def decryption_view(request):
     global shared_image, shared_text
@@ -236,20 +237,23 @@ def decryption_view(request):
         try:
             image = Image.open(image_file)
 
+            # Reject unsupported SVGs
             if image.format == 'SVG':
                 warning = "SVG format is not supported for decryption."
                 return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
+            # Convert to RGBA if needed
             if image.mode != 'RGBA':
                 image = image.convert('RGBA')
 
             decoded = extract_text_from_image(image)
-            if not decoded or not decoded.startswith("MSG:"):
+
+            # Validate prefix and content
+            if not decoded or not decoded.startswith(HIDDEN_PREFIX):
                 warning = "No hidden message found in the uploaded image."
                 return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
-            # Extract only the actual message
-            text = decoded[4:]
+            text = decoded[len(HIDDEN_PREFIX):]  # Remove MSG: prefix
             shared_image = image.copy()
             shared_text = text
 
@@ -262,6 +266,7 @@ def decryption_view(request):
             return render(request, 'decryption.html', {'text': '', 'warning': warning})
 
     return render(request, 'decryption.html', {'text': text, 'warning': warning})
+
 
 def dashboard_view(request):
     global shared_image, shared_text
