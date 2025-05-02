@@ -13,5 +13,6 @@ urlpatterns = [
     path('download/<str:image_path>/', views.download_image, name='download_image'),
 ]
 
-# Append static/media only in development
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Allow media access (only works on Render if file exists in /media)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
