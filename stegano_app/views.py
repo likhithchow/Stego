@@ -176,10 +176,6 @@ def f5_decode(image):
 
 # --------------------------------------
 
-from django.http import HttpResponse
-from PIL import Image, UnidentifiedImageError
-import io
-
 def encryption_view(request):
     global shared_image, shared_text
     message = ''
@@ -211,6 +207,7 @@ def encryption_view(request):
             output_buffer = io.BytesIO()
             encrypted.save(output_buffer, format="PNG")
             output_buffer.seek(0)
+            message='✅ Success! Your message has been encrypted into the image'
 
             response = HttpResponse(output_buffer, content_type='image/png')
             response['Content-Disposition'] = 'attachment; filename=stego_image.png'
@@ -219,9 +216,7 @@ def encryption_view(request):
         except UnidentifiedImageError:
             return render(request, 'encryption.html', {'message': 'Unsupported or corrupted image format.'})
 
-    return render(request, 'encryption.html', {'message': '✅ Success! Your message has been encrypted into the image.'})
-
-
+    return render(request, 'encryption.html', {'message': message})
 
 def decryption_view(request):
     global shared_image, shared_text

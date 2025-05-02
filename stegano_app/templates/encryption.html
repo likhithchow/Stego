@@ -56,20 +56,10 @@
                 </div>
             </form>
             {% if message %}
-    <div class="alert alert-success mt-4 text-center" id="success-message">
-        {{ message }}
-    </div>
-    <script>
-        // Clear form fields if encryption was successful
-        document.addEventListener('DOMContentLoaded', function () {
-            const msg = document.getElementById('success-message');
-            if (msg) {
-                document.getElementById('image').value = '';
-                document.getElementById('text').value = '';
-            }
-        });
-    </script>
-{% endif %}
+                <div class="alert alert-info mt-4 text-center">
+                    {{ message }}
+                </div>
+            {% endif %}
         </div>
     </div>
 
