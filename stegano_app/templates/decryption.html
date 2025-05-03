@@ -36,36 +36,40 @@
 </head>
 <body>
 
-    {% include 'navbar.html' %}
+{% include 'navbar.html' %}
 
-    <div class="container">
-        <div class="form-container mx-auto col-md-8 col-lg-6">
-            <h2 class="text-center mb-4">🕵️‍♂️ Decrypt Hidden Message</h2>
+<div class="container">
+    <div class="form-container mx-auto col-md-8 col-lg-6">
+        <h2 class="text-center mb-4">🕵️‍♂️ Decrypt Hidden Message</h2>
 
-            <form action="{% url 'decryption' %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="image" class="form-label">Upload Encrypted Image:</label>
-                    <input type="file" name="image" id="image" class="form-control" required>
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-gradient">Decrypt</button>
-                </div>
-            </form>
+        <form action="{% url 'decryption' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="image" class="form-label">Upload Encrypted Image:</label>
+                <input type="file" name="image" id="image" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Enter Password for Decryption:</label>
+                <input type="password" class="form-control" id="password" name="password" required minlength="4">
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-gradient">Decrypt</button>
+            </div>
+        </form>
 
-            {% if warning %}
-                <div class="alert alert-danger mt-4 text-center">
-                    <strong>❌ {{ warning }}</strong>
-                </div>
-            {% elif text %}
-                <div class="alert alert-success mt-4 text-center">
-                    <h5 class="text-success">✅ Decrypted Message:</h5>
-                    <p class="mb-0"><strong>{{ text }}</strong></p>
-                </div>
-            {% endif %}
-        </div>
+        {% if warning %}
+            <div class="alert alert-danger mt-4 text-center">
+                <strong>❌ {{ warning }}</strong>
+            </div>
+        {% elif text %}
+            <div class="alert alert-success mt-4 text-center">
+                <h5 class="text-success">✅ Decrypted Message:</h5>
+                <p class="mb-0"><strong>{{ text }}</strong></p>
+            </div>
+        {% endif %}
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
